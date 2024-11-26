@@ -164,7 +164,7 @@ def receiving_messages(c):
         c.close()
 
 def main():
-    choice = input("Host (1) or connect (2)?: ")
+    choice = input("Welcome!\nStart a new chat (1) or connect (2)?: ")
     try:
         if choice == "1":
             server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
