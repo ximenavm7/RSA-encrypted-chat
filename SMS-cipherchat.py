@@ -3,6 +3,7 @@ import threading
 import sys
 import time
 import json
+import csv
 
 # RSA Key Components
 p = 104729
@@ -14,6 +15,19 @@ d = pow(e, -1, phi)  # Calculate private exponent
 
 SERVER_IP = "127.0.0.1"
 SERVER_PORT = 9999
+
+# Add a function to log details to a CSV file
+def log_to_csv(user, message, rsa_enc_time, crt_enc_time, rsa_dec_time, crt_dec_time):
+    filename = "chat_log.csv"
+    headers = ["User", "Message", "RSA Encryption Time", "RSA-CRT Encryption Time", "RSA Decryption Time", "RSA-CRT Decryption Time"]
+    
+    # Open the file in append mode
+    with open(filename, mode="a", newline="", encoding="utf-8") as file:
+        writer = csv.writer(file)
+        # Write the header if the file is empty
+        if file.tell() == 0:
+            writer.writerow(headers)
+        writer.writerow([user, message, rsa_enc_time, crt_enc_time, rsa_dec_time, crt_dec_time])
 
 # Standard RSA Encryption
 def encriptacion_RSA(plain, e, n):
@@ -115,9 +129,9 @@ def sending_messages(c):
             serialized_message = json.dumps(rsa_encrypted)
             c.send(serialized_message.encode())
 
-            # Print out the encryption times
-            print(f"RSA Encryption Time: {rsa_time:.6f} seconds")
-            print(f"RSA-CRT Encryption Time: {crt_time:.6f} seconds")
+            # Log the details to a CSV file
+            log_to_csv("You", message, rsa_time, crt_time, None, None)
+
     except Exception as error:
         print(f"Error sending message: {error}")
         c.close()
@@ -139,11 +153,12 @@ def receiving_messages(c):
             # Compare RSA and RSA-CRT decryption times
             rsa_time, crt_time, rsa_decrypted, crt_decrypted = compare_decryption_methods(cipher, d, n, p, q)
 
-            print(f"RSA Decryption Time: {rsa_time:.6f} seconds")
-            print(f"RSA-CRT Decryption Time: {crt_time:.6f} seconds")
-
             plain_message = ''.join(chr(i) for i in rsa_decrypted)
             print(f"Partner: {plain_message}")
+
+            # Log the details to a CSV file
+            log_to_csv("Partner", plain_message, None, None, rsa_time, crt_time)
+
     except Exception as error:
         print(f"Error receiving message: {error}")
         c.close()
